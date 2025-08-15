@@ -58,7 +58,7 @@ ToneBridgeは、エンジニアと非エンジニア間のコミュニケーシ�
 | レイヤー | 責務 | 技術スタック |
 |---------|------|-------------|
 | **プレゼンテーション層** | UI/UX提供 | HTML/CSS/JavaScript, React, Vue.js |
-| **API Gateway層** | ルーティング、認証、レート制限 | Golang (Fiber v3) |
+| **API Gateway層** | ルーティング、認証、レート制限 | Golang (Fiber v2) |
 | **ビジネスロジック層** | 中核ビジネス処理 | Golang, Python |
 | **データアクセス層** | データ永続化、キャッシング | PostgreSQL, Redis |
 | **インフラストラクチャ層** | 基盤サービス | Docker, Kubernetes, AWS/GCP/Azure |
@@ -77,7 +77,7 @@ ToneBridgeは、エンジニアと非エンジニア間のコミュニケーシ�
 
 **技術仕様：**
 ```go
-// Fiber v3フレームワーク使用
+// Fiber v2フレームワーク使用
 type Gateway struct {
     Router        *fiber.App
     AuthService   AuthServiceInterface
@@ -538,7 +538,7 @@ events = {
 
 | フレームワーク | 用途 | 選定理由 |
 |--------------|-----|---------|
-| **Fiber v3** | Web Framework (Go) | 高速、Express風API、WebSocket対応 |
+| **Fiber v2** | Web Framework (Go) | 高速、Express風API、WebSocket対応 |
 | **FastAPI** | Web Framework (Python) | 非同期対応、自動ドキュメント生成 |
 | **LangChain** | LLM Framework | マルチプロバイダー対応、チェーン構築 |
 | **React/Vue** | Frontend | コンポーネント指向、エコシステム |

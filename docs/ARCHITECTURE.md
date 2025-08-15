@@ -25,7 +25,7 @@ ToneBridgeは、高性能・高可用性・拡張性を重視したハイブリ�
                                 │
                                 ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                  API Gateway (Golang/Fiber v3)                │
+│           API Gateway (Golang/Fiber v2) :8082                 │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  - JWT/API Key Authentication                         │   │
 │  │  - Rate Limiting (Token Bucket Algorithm)             │   │
@@ -85,7 +85,7 @@ ToneBridgeは、高性能・高可用性・拡張性を重視したハイブリ�
 ```go
 // 主要機能
 type APIGateway struct {
-    Router          *fiber.App           // Fiber v3 Framework
+    Router          *fiber.App           // Fiber v2 Framework
     Cache           *CacheService        // L1/L2 キャッシング
     RateLimiter     *RateLimiter        // Token Bucket Algorithm
     CircuitBreaker  *CircuitBreaker     // Resilience Pattern
@@ -563,9 +563,9 @@ graph LR
 
 ```bash
 # wrk benchmark results
-wrk -t12 -c400 -d30s --latency http://localhost:8000/health
+wrk -t12 -c400 -d30s --latency http://localhost:8082/health
 
-Running 30s test @ http://localhost:8000/health
+Running 30s test @ http://localhost:8082/health
   12 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
     Latency    28.45ms   12.34ms  234.56ms   85.23%

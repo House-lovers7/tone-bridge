@@ -100,9 +100,9 @@ docker-compose restart
 ### 5. 動作確認
 
 ブラウザで以下にアクセス：
-- **Web UI**: http://localhost:8080
-- **API Health**: http://localhost:8080/health
-- **API Docs**: http://localhost:8080/docs
+- **Web UI**: http://localhost:8082
+- **API Health**: http://localhost:8082/health
+- **API Docs**: http://localhost:8082/docs
 
 ## 詳細セットアップ
 
@@ -341,13 +341,13 @@ sudo systemctl restart docker
 **問題**: `port is already allocated`
 ```bash
 # 使用中のポートを確認
-lsof -i :8080  # Mac/Linux
-netstat -ano | findstr :8080  # Windows
+lsof -i :8082  # Mac/Linux
+netstat -ano | findstr :8082  # Windows
 
 # プロセスを終了するか、ポートを変更
 # docker-compose.ymlでポートを変更
 ports:
-  - "8081:8080"  # 8081に変更
+  - "8083:8080"  # 8083に変更（内部ポート8080はそのまま）
 ```
 
 #### 2. データベース接続エラー
@@ -437,7 +437,7 @@ docker-compose up -d --build
 
 ```bash
 # ユーザー登録
-curl -X POST http://localhost:8080/api/v1/auth/register \
+curl -X POST http://localhost:8082/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -446,7 +446,7 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
   }'
 
 # ログイン
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST http://localhost:8082/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -454,7 +454,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
   }'
 
 # テキスト変換（トークンを使用）
-curl -X POST http://localhost:8080/api/v1/transform \
+curl -X POST http://localhost:8082/api/v1/transform \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -473,7 +473,7 @@ npm install @tonebridge/sdk
 const { ToneBridgeClient } = require('@tonebridge/sdk');
 const client = new ToneBridgeClient({
   apiKey: 'your-api-key',
-  baseURL: 'http://localhost:8080'
+  baseURL: 'http://localhost:8082'
 });
 
 const result = await client.transform.soften(

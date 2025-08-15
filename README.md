@@ -55,7 +55,7 @@ npm start
 
 ## 🛠 技術スタック
 
-- **API Gateway**: Golang (Fiber v3) - 高性能ルーティング
+- **API Gateway**: Golang (Fiber v2) - 高性能ルーティング (ポート: 8082)
 - **LLM Service**: Python (FastAPI + LangChain) - AI処理
 - **Real-time**: Socket.IO + Redis - リアルタイム通信
 - **Database**: PostgreSQL 16 + pgvector - ベクトル検索対応
@@ -102,6 +102,7 @@ ToneBridge/
 - [セットアップガイド](./docs/SETUP_GUIDE.md)
 - [APIリファレンス](./docs/API_REFERENCE.md)
 - [SDKガイド](./docs/SDK_GUIDE.md)
+- [実装ステータス](./docs/IMPLEMENTATION_STATUS.md)
 
 ### 運用・デプロイ
 - [デプロイメントガイド](./docs/DEPLOYMENT.md)
@@ -109,6 +110,7 @@ ToneBridge/
 
 ### その他
 - [アーキテクチャ設計](./docs/ARCHITECTURE.md)
+- [サービス仕様書](./docs/02_architecture/SERVICE_SPECIFICATION.md)
 - [全ドキュメント一覧](./docs/README.md)
 
 ## 🤝 コントリビューション

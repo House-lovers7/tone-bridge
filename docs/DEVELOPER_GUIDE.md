@@ -90,7 +90,7 @@ make dev
 ┌─────────────────┐
 │   Frontend      │  React/Vue.js
 ├─────────────────┤
-│  API Gateway    │  Golang (Fiber v3)
+│  API Gateway    │  Golang (Fiber v2)
 ├─────────────────┤
 │  Microservices  │
 │  ├─ LLM Service │  Python (FastAPI)

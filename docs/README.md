@@ -13,6 +13,7 @@ ToneBridgeプロジェクトのドキュメントは、開発者、運用チー�
 - [🔧 セットアップガイド](./SETUP_GUIDE.md) - 初期環境構築手順
 - [⚡ クイックスタート](./QUICK_START.md) - 最短での動作確認
 - [📱 モバイルアプリ開発](../mobile-app/EXPO_SETUP.md) - Expo/React Native開発
+- [✅ 実装ステータス](./IMPLEMENTATION_STATUS.md) - 実装済み/未実装機能一覧
 
 ### API・SDK
 - [🔌 API リファレンス](./API_REFERENCE.md) - エンドポイント仕様
@@ -39,7 +40,7 @@ ToneBridgeプロジェクトのドキュメントは、開発者、運用チー�
 
 ### 技術スタック
 
-- **API Gateway**: Golang (Fiber v3) - 30ms レスポンス
+- **API Gateway**: Golang (Fiber v2) - 30ms レスポンス (ポート 8082)
 - **LLM Service**: Python (FastAPI + LangChain)
 - **Real-time**: Socket.IO + Redis
 - **Database**: PostgreSQL + pgvector
@@ -77,6 +78,7 @@ ToneBridgeプロジェクトのドキュメントは、開発者、運用チー�
 - [システムアーキテクチャ](./02_architecture/system_architecture.md)
 - [コンポーネント設計](./02_architecture/component_design.md)
 - [インフラアーキテクチャ](./02_architecture/infrastructure_architecture.md)
+- [サービス仕様書](./02_architecture/SERVICE_SPECIFICATION.md)
 - [📊 アーキテクチャ概要](./ARCHITECTURE.md)
 - [最適化アーキテクチャ](./optimized-architecture.md)
 
@@ -154,16 +156,16 @@ AI実装、モデル設計、評価指標
 
 ## 📈 プロジェクト進捗・レポート
 
-開発進捗とマイルストーン達成記録
+開発進捗とマイルストーン達成記録 - [📊 進捗レポート一覧](./progress/README.md)
 
-- [Phase 2 完了報告](../PHASE2_COMPLETION.md)
+- [Phase 2 完了報告](./progress/PHASE2_COMPLETION.md)
 - [Phase 3 進捗](./phase3-progress.md)
-- [プロジェクトサマリー](../PROJECT_SUMMARY.md)
-- [成果報告](../ACHIEVEMENT_REPORT.md)
-- [クイックスタート成功事例](../QUICKSTART_SUCCESS.md)
-- [プレビューモード実装](../PREVIEW_MODE.md)
-- [ML トレーニング実装](../ML_TRAINING_IMPLEMENTATION.md)
-- [モバイルアプリExpo対応](../MOBILE_APP_EXPO.md)
+- [プロジェクトサマリー](./progress/PROJECT_SUMMARY.md)
+- [成果報告](./progress/ACHIEVEMENT_REPORT.md)
+- [クイックスタート成功事例](./progress/QUICKSTART_SUCCESS.md)
+- [プレビューモード実装](./progress/PREVIEW_MODE.md)
+- [ML トレーニング実装](./progress/ML_TRAINING_IMPLEMENTATION.md)
+- [モバイルアプリExpo対応](./progress/MOBILE_APP_EXPO.md)
 
 ---
 
@@ -210,6 +212,15 @@ docs/
 ├── DEPLOYMENT.md         # デプロイメントガイド
 ├── optimized-architecture.md  # 最適化アーキテクチャ詳細
 ├── phase3-progress.md    # Phase 3進捗
+├── progress/             # 進捗レポート
+│   ├── README.md
+│   ├── PHASE2_COMPLETION.md
+│   ├── PROJECT_SUMMARY.md
+│   ├── ACHIEVEMENT_REPORT.md
+│   ├── QUICKSTART_SUCCESS.md
+│   ├── PREVIEW_MODE.md
+│   ├── ML_TRAINING_IMPLEMENTATION.md
+│   └── MOBILE_APP_EXPO.md
 ├── 01_requirements/      # 要件定義
 ├── 02_architecture/      # 詳細設計ドキュメント
 ├── 03_data_design/       # データベース設計

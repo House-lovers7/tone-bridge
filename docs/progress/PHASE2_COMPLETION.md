@@ -109,7 +109,7 @@ API Endpoints: 40+
 ## 🛠️ Technology Stack Summary
 
 ### Backend
-- **Go/Fiber v3**: High-performance API Gateway
+- **Go/Fiber v2**: High-performance API Gateway
 - **Python/FastAPI**: LLM Service & Auto-Transform
 - **LangChain**: Advanced NLP pipelines
 - **PostgreSQL 16 + pgvector**: Semantic search capable

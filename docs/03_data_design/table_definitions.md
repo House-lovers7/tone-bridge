@@ -562,6 +562,255 @@ LIMIT 20;
 - **レプリケーション遅延**: 10秒以上
 - **デッドロック**: 1時間に5回以上
 
+### 3.11 auto_transform_rules
+
+自動変換ルールテーブル。
+
+```sql
+CREATE TABLE auto_transform_rules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES organizations(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    trigger_pattern TEXT NOT NULL,
+    transformation_type VARCHAR(50) NOT NULL,
+    target_tone VARCHAR(50),
+    intensity_level INTEGER CHECK (intensity_level BETWEEN 1 AND 3),
+    active BOOLEAN DEFAULT TRUE,
+    priority INTEGER DEFAULT 0,
+    conditions JSONB DEFAULT '{}',
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+-- インデックス
+CREATE INDEX idx_auto_transform_rules_organization_id ON auto_transform_rules(organization_id);
+CREATE INDEX idx_auto_transform_rules_active ON auto_transform_rules(active);
+CREATE INDEX idx_auto_transform_rules_priority ON auto_transform_rules(priority);
+```
+
+### 3.12 webhooks
+
+Webhook設定テーブル。
+
+```sql
+CREATE TABLE webhooks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES organizations(id),
+    name VARCHAR(255) NOT NULL,
+    url TEXT NOT NULL,
+    events TEXT[] NOT NULL,
+    secret VARCHAR(255),
+    active BOOLEAN DEFAULT TRUE,
+    headers JSONB DEFAULT '{}',
+    retry_count INTEGER DEFAULT 3,
+    timeout_ms INTEGER DEFAULT 30000,
+    last_triggered_at TIMESTAMP WITH TIME ZONE,
+    failure_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+-- インデックス
+CREATE INDEX idx_webhooks_organization_id ON webhooks(organization_id);
+CREATE INDEX idx_webhooks_active ON webhooks(active);
+CREATE INDEX idx_webhooks_events ON webhooks USING gin(events);
+```
+
+### 3.13 integrations
+
+外部サービス統合設定テーブル。
+
+```sql
+CREATE TABLE integrations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES organizations(id),
+    service_type VARCHAR(50) NOT NULL, -- slack, teams, discord, outlook
+    config JSONB NOT NULL,
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expires_at TIMESTAMP WITH TIME ZONE,
+    webhook_url TEXT,
+    active BOOLEAN DEFAULT TRUE,
+    last_sync_at TIMESTAMP WITH TIME ZONE,
+    sync_status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id) ON DELETE CASCADE,
+    CONSTRAINT unique_service_per_org UNIQUE (organization_id, service_type)
+);
+
+-- インデックス
+CREATE INDEX idx_integrations_organization_id ON integrations(organization_id);
+CREATE INDEX idx_integrations_service_type ON integrations(service_type);
+CREATE INDEX idx_integrations_active ON integrations(active);
+```
+
+### 3.14 notification_settings
+
+通知設定テーブル。
+
+```sql
+CREATE TABLE notification_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    organization_id UUID REFERENCES organizations(id),
+    notification_type VARCHAR(50) NOT NULL,
+    channel VARCHAR(50) NOT NULL, -- email, slack, teams, in_app
+    enabled BOOLEAN DEFAULT TRUE,
+    frequency VARCHAR(50) DEFAULT 'immediate', -- immediate, hourly, daily, weekly
+    conditions JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) 
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id) ON DELETE CASCADE,
+    CONSTRAINT unique_notification_per_user UNIQUE (user_id, notification_type, channel)
+);
+
+-- インデックス
+CREATE INDEX idx_notification_settings_user_id ON notification_settings(user_id);
+CREATE INDEX idx_notification_settings_organization_id ON notification_settings(organization_id);
+CREATE INDEX idx_notification_settings_enabled ON notification_settings(enabled);
+```
+
+### 3.15 teams
+
+チーム管理テーブル。
+
+```sql
+CREATE TABLE teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES organizations(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    settings JSONB DEFAULT '{}',
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+-- チームメンバー中間テーブル
+CREATE TABLE team_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID REFERENCES teams(id),
+    user_id UUID REFERENCES users(id),
+    role VARCHAR(50) DEFAULT 'member',
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_team FOREIGN KEY (team_id) 
+        REFERENCES teams(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) 
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT unique_team_member UNIQUE (team_id, user_id)
+);
+
+-- インデックス
+CREATE INDEX idx_teams_organization_id ON teams(organization_id);
+CREATE INDEX idx_teams_deleted_at ON teams(deleted_at);
+CREATE INDEX idx_team_members_team_id ON team_members(team_id);
+CREATE INDEX idx_team_members_user_id ON team_members(user_id);
+```
+
+### 3.16 ml_models
+
+MLモデル管理テーブル。
+
+```sql
+CREATE TABLE ml_models (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES organizations(id),
+    name VARCHAR(255) NOT NULL,
+    model_type VARCHAR(50) NOT NULL,
+    version VARCHAR(50) NOT NULL,
+    status VARCHAR(50) DEFAULT 'training', -- training, ready, failed, archived
+    config JSONB DEFAULT '{}',
+    training_data JSONB DEFAULT '{}',
+    metrics JSONB DEFAULT '{}',
+    model_path TEXT,
+    trained_by UUID REFERENCES users(id),
+    training_started_at TIMESTAMP WITH TIME ZONE,
+    training_completed_at TIMESTAMP WITH TIME ZONE,
+    deployed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+-- インデックス
+CREATE INDEX idx_ml_models_organization_id ON ml_models(organization_id);
+CREATE INDEX idx_ml_models_status ON ml_models(status);
+CREATE INDEX idx_ml_models_model_type ON ml_models(model_type);
+```
+
+### 3.17 feedback
+
+ユーザーフィードバックテーブル。
+
+```sql
+CREATE TABLE feedback (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    transformation_id UUID,
+    user_id UUID REFERENCES users(id),
+    organization_id UUID REFERENCES organizations(id),
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+    feedback_type VARCHAR(50) NOT NULL, -- quality, accuracy, tone, usefulness
+    comment TEXT,
+    original_text TEXT,
+    transformed_text TEXT,
+    suggested_text TEXT,
+    is_helpful BOOLEAN,
+    processed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) 
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+-- インデックス
+CREATE INDEX idx_feedback_user_id ON feedback(user_id);
+CREATE INDEX idx_feedback_organization_id ON feedback(organization_id);
+CREATE INDEX idx_feedback_transformation_id ON feedback(transformation_id);
+CREATE INDEX idx_feedback_rating ON feedback(rating);
+CREATE INDEX idx_feedback_processed ON feedback(processed);
+```
+
+### 3.18 sessions
+
+セッション管理テーブル。
+
+```sql
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    ip_address INET,
+    user_agent TEXT,
+    device_info JSONB DEFAULT '{}',
+    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) 
+        REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- インデックス
+CREATE INDEX idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX idx_sessions_token_hash ON sessions(token_hash);
+CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
+```
+
 ## 10. 移行計画
 
 ### 10.1 初期データ投入

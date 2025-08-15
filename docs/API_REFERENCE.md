@@ -8,7 +8,7 @@ ToneBridge API は RESTful API として設計されており、JSON形式でデ
 ```
 Production: https://api.tonebridge.io/api/v1
 Staging: https://staging-api.tonebridge.io/api/v1
-Development: http://localhost:8080/api/v1
+Development: http://localhost:8082/api/v1
 ```
 
 ### 認証方式

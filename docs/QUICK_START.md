@@ -23,14 +23,14 @@ cp .env.example .env
 docker-compose up -d
 
 # 4. ブラウザでアクセス
-open http://localhost:8080
+open http://localhost:8082
 ```
 
 ## 🎯 最初の変換を試す
 
 ### Web UIから
 
-1. http://localhost:8080 にアクセス
+1. http://localhost:8082 にアクセス
 2. テキストエリアに文章を入力
 3. 変換タイプを選択（Soften, Clarify, etc.）
 4. "Transform"ボタンをクリック
@@ -42,7 +42,7 @@ open http://localhost:8080
 TOKEN="test-api-key"
 
 # テキスト変換
-curl -X POST http://localhost:8000/api/v1/transform \
+curl -X POST http://localhost:8003/api/v1/transform \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -65,7 +65,7 @@ import { ToneBridgeClient } from '@tonebridge/sdk';
 
 const client = new ToneBridgeClient({
   apiKey: 'your-api-key',
-  baseURL: 'http://localhost:8000'
+  baseURL: 'http://localhost:8003'
 });
 
 const result = await client.transform.soften(
@@ -86,7 +86,7 @@ from tonebridge import ToneBridgeClient
 
 client = ToneBridgeClient(
     api_key="your-api-key",
-    base_url="http://localhost:8000"
+    base_url="http://localhost:8003"
 )
 
 result = client.transform.soften(
@@ -161,7 +161,7 @@ docker-compose up discord-bot -d
 
 ```bash
 # API Gateway
-curl http://localhost:8000/health
+curl http://localhost:8003/health
 
 # WebSocket
 curl http://localhost:3001/health

@@ -130,7 +130,7 @@ Web UI   ████████████████████ 100% ✅
 | カテゴリ | 技術 | 実装状況 |
 |---------|------|----------|
 | **バックエンド** | | |
-| API Gateway | Golang/Fiber v3 | ✅ |
+| API Gateway | Golang/Fiber v2 | ✅ |
 | LLM Service | Python/FastAPI + LangChain | ✅ |
 | Integration Core | Python/FastAPI | ✅ |
 | **フロントエンド** | | |

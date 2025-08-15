@@ -49,7 +49,7 @@ make lint-llm       # LLMサービス (flake8)
 make gateway        # Gateway起動 (go run)
 make gateway-dev    # Gateway開発モード (localhost:8082)
 make llm            # LLMサービス起動 (uvicorn)
-make llm-dev        # LLMサービス開発モード (localhost:8000)
+make llm-dev        # LLMサービス開発モード (localhost:8003)
 make watch-gateway  # Gateway自動リロード (air使用)
 make watch-llm      # LLMサービス自動リロード
 ./dev.sh gateway-dev # Gateway開発モードヘルパー
@@ -369,7 +369,7 @@ API Gatewayのポート番号が正しいか確認：
 - もし8080でアクセスしている場合は8082に変更してください
 ```bash
 curl http://localhost:8082/health  # 正しい
-curl http://localhost:8080/health  # 間違い（古いドキュメントの場合）
+# curl http://localhost:8080/health  # 間違い（古いポート番号）
 ```
 
 ### データベース接続エラー

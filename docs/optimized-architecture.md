@@ -84,7 +84,7 @@ graph TB
 
 ### API Gateway (Golang) ✅
 ```go
-Framework: Fiber v3 (Fasthttp based)
+Framework: Fiber v2 (Fasthttp based)
 理由: Express風API + 最高速パフォーマンス
 
 主要ライブラリ:

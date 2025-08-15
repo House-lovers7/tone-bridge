@@ -7,7 +7,7 @@ ToneBridge「エンジニア↔非エンジニア摩擦ゼロ化プラットフ�
 ## 📊 実装完了項目
 
 ### ✅ コアサービス
-- **API Gateway (Golang/Fiber v3)**
+- **API Gateway (Golang/Fiber v2)**
   - JWT認証システム
   - Rate limiting
   - Circuit breaker
@@ -99,7 +99,7 @@ cd infrastructure
 docker-compose up -d
 
 # 3. Web UIアクセス
-open http://localhost:3000
+open http://localhost:3001
 ```
 
 ## 📁 プロジェクト構造
@@ -107,7 +107,7 @@ open http://localhost:3000
 ```
 ToneBridge/
 ├── services/
-│   ├── api-gateway/       # 🆕 Golang高速APIゲートウェイ (Fiber v3)
+│   ├── api-gateway/       # 🆕 Golang高速APIゲートウェイ (Fiber v2)
 │   ├── api/               # Python メインAPI (FastAPI)
 │   ├── transform/         # 変換サービス
 │   ├── analyze/           # 分析サービス

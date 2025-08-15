@@ -274,7 +274,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Text Transformation Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:8080');
+    await page.goto('http://localhost:8082');
     
     // ログイン
     await page.fill('[data-testid="email"]', 'test@example.com');
@@ -402,7 +402,7 @@ export default function () {
   };
 
   const response = http.post(
-    'http://localhost:8080/api/v1/transform',
+    'http://localhost:8082/api/v1/transform',
     payload,
     params
   );

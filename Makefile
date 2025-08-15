@@ -99,8 +99,8 @@ lint-llm:
 # Health checks
 health-check:
 	@echo "Checking service health..."
-	@curl -s http://localhost:8080/health | jq '.' || echo "Gateway is not responding"
-	@curl -s http://localhost:8000/health | jq '.' || echo "LLM Service is not responding"
+	@curl -s http://localhost:8082/health | jq '.' || echo "Gateway is not responding"
+	@curl -s http://localhost:8003/health | jq '.' || echo "LLM Service is not responding"
 
 # Development utilities
 watch-gateway:
@@ -112,13 +112,13 @@ watch-llm:
 # API testing
 test-transform:
 	@echo "Testing transformation endpoint..."
-	@curl -X POST http://localhost:8080/api/v1/transform \
+	@curl -X POST http://localhost:8082/api/v1/transform \
 		-H "Content-Type: application/json" \
 		-d '{"text": "Fix the bug ASAP", "transformation_type": "tone", "target_tone": "warm"}' | jq '.'
 
 test-analyze:
 	@echo "Testing analysis endpoint..."
-	@curl -X POST http://localhost:8080/api/v1/analyze \
+	@curl -X POST http://localhost:8082/api/v1/analyze \
 		-H "Content-Type: application/json" \
 		-d '{"text": "Critical bug in production environment needs immediate attention"}' | jq '.'
 
