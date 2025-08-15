@@ -1,0 +1,197 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15.14-alpine
+    environment:
+      POSTGRES_DB: tonebridge
+      POSTGRES_USER: tonebridge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./infrastructure/postgres/migrations:/docker-entrypoint-initdb.d/migrations
+    ports:
+      - "5432:5432"
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  api:
+    build: ./services/api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://tonebridge:${POSTGRES_PASSWORD:-password}@postgres:5432/tonebridge
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  transform-service:
+    build: ./services/transform
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://tonebridge:${POSTGRES_PASSWORD:-password}@postgres:5432/tonebridge
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  analyze-service:
+    build: ./services/analyze
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql://tonebridge:${POSTGRES_PASSWORD:-password}@postgres:5432/tonebridge
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  auto-transform:
+    build: ./services/auto-transform
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://tonebridge:${POSTGRES_PASSWORD:-password}@postgres:5432/tonebridge
+      - REDIS_URL=redis://redis:6379
+      - TRANSFORM_SERVICE_URL=http://transform-service:8001
+      - ANALYZE_SERVICE_URL=http://analyze-service:8002
+    depends_on:
+      - postgres
+      - redis
+      - transform-service
+      - analyze-service
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  websocket:
+    build: ./services/websocket-server
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+      - API_URL=http://api:8000
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=http://localhost:8080,http://localhost:3000
+    depends_on:
+      - redis
+      - api
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  slack-bot:
+    build: ./integrations/slack
+    environment:
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+      - API_URL=http://api:8000
+      - WEBSOCKET_URL=ws://websocket:3001
+    depends_on:
+      - api
+      - websocket
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  teams-bot:
+    build: ./integrations/teams
+    ports:
+      - "3978:3978"
+    environment:
+      - MICROSOFT_APP_ID=${MICROSOFT_APP_ID}
+      - MICROSOFT_APP_PASSWORD=${MICROSOFT_APP_PASSWORD}
+      - API_URL=http://api:8000
+      - WEBSOCKET_URL=ws://websocket:3001
+    depends_on:
+      - api
+      - websocket
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  discord-bot:
+    build: ./integrations/discord
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - API_URL=http://api:8000
+      - WEBSOCKET_URL=ws://websocket:3001
+    depends_on:
+      - api
+      - websocket
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    environment:
+      - API_URL=http://api:8000
+      - WEBSOCKET_URL=ws://localhost:3001
+    depends_on:
+      - api
+      - websocket
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infrastructure/nginx/sites-enabled:/etc/nginx/sites-enabled
+    depends_on:
+      - api
+      - websocket
+      - web
+    networks:
+      - tonebridge-network
+    restart: unless-stopped
+
+networks:
+  tonebridge-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

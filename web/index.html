@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToneBridge - Message Transformation Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌉 ToneBridge</h1>
+            <p class="tagline">エンジニア↔非エンジニア コミュニケーションを円滑に</p>
+        </header>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="card">
+            <h2>ログイン</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">メールアドレス</label>
+                    <input type="email" id="email" required placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">パスワード</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">ログイン</button>
+                <button type="button" id="registerBtn" class="btn btn-secondary">新規登録</button>
+            </form>
+            <div class="divider">または</div>
+            <button id="previewBtn" class="btn btn-preview">🎯 お試しで使ってみる（プレビュー版）</button>
+            <p class="preview-info">登録不要・500文字まで・1日10回まで</p>
+        </div>
+
+        <!-- Preview Mode Section -->
+        <div id="previewSection" class="card" style="display: none;">
+            <div class="preview-header">
+                <h2>🎯 プレビューモード</h2>
+                <button id="exitPreviewBtn" class="btn btn-small">ログイン画面へ</button>
+            </div>
+            <div class="preview-limits">
+                <span class="limit-badge">📝 500文字まで</span>
+                <span class="limit-badge">⏱️ 1分3回まで</span>
+                <span class="limit-badge">📅 1日10回まで</span>
+                <span id="previewUsage" class="limit-badge"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="previewInputText">変換したいテキスト（500文字まで）</label>
+                <textarea id="previewInputText" rows="5" maxlength="500" placeholder="変換したいメッセージを入力してください..."></textarea>
+                <div class="char-counter">
+                    <span id="charCount">0</span> / 500
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="previewTargetTone">目標トーン</label>
+                <select id="previewTargetTone">
+                    <option value="professional">プロフェッショナル</option>
+                    <option value="casual">カジュアル</option>
+                    <option value="formal">フォーマル</option>
+                    <option value="technical">技術的</option>
+                    <option value="warm">温かみのある</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="previewIntensity">変換強度</label>
+                <select id="previewIntensity">
+                    <option value="1">弱（subtle）</option>
+                    <option value="2" selected>中（moderate）</option>
+                    <option value="3">強（strong）</option>
+                </select>
+            </div>
+
+            <button id="previewTransformBtn" class="btn btn-primary">変換する</button>
+            
+            <!-- Preview Results -->
+            <div id="previewResults" class="preview-results" style="display: none;">
+                <h3>変換結果</h3>
+                <div class="result-container">
+                    <div class="result-box">
+                        <h4>元のテキスト</h4>
+                        <div id="previewOriginal" class="text-display"></div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="result-box">
+                        <h4>変換後のテキスト</h4>
+                        <div id="previewTransformed" class="text-display"></div>
+                        <button id="previewCopyBtn" class="btn btn-small">コピー</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upgrade-prompt">
+                <h3>✨ フル機能を使いたい方は</h3>
+                <ul>
+                    <li>✅ 文字数無制限</li>
+                    <li>✅ レート制限なし</li>
+                    <li>✅ 変換履歴の保存</li>
+                    <li>✅ カスタム辞書機能</li>
+                    <li>✅ 高度な分析機能</li>
+                </ul>
+                <button id="upgradeBtn" class="btn btn-upgrade">今すぐ登録（無料）</button>
+            </div>
+        </div>
+
+        <!-- Main App Section (hidden initially) -->
+        <div id="appSection" style="display: none;">
+            <div class="user-info">
+                <span id="userEmail"></span>
+                <button id="logoutBtn" class="btn btn-small">ログアウト</button>
+            </div>
+
+            <!-- Transform Section -->
+            <div class="card">
+                <h2>テキスト変換</h2>
+                
+                <div class="form-group">
+                    <label for="inputText">変換したいテキスト</label>
+                    <textarea id="inputText" rows="5" placeholder="変換したいメッセージを入力してください..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="transformationType">変換タイプ</label>
+                    <select id="transformationType">
+                        <option value="tone">文体変換</option>
+                        <option value="structure">構造化</option>
+                        <option value="summarize">要約</option>
+                        <option value="terminology">専門用語変換</option>
+                    </select>
+                </div>
+
+                <div id="toneOptions" class="form-group">
+                    <label for="targetTone">目標トーン</label>
+                    <select id="targetTone">
+                        <option value="warm">温かみのある（配慮型）</option>
+                        <option value="professional">プロフェッショナル</option>
+                        <option value="casual">カジュアル</option>
+                        <option value="technical">技術的</option>
+                        <option value="executive">エグゼクティブ向け</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="intensity">変換強度</label>
+                    <select id="intensity">
+                        <option value="1">弱（subtle）</option>
+                        <option value="2" selected>中（moderate）</option>
+                        <option value="3">強（strong）</option>
+                    </select>
+                </div>
+
+                <button id="transformBtn" class="btn btn-primary">変換</button>
+                <button id="analyzeBtn" class="btn btn-secondary">分析</button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="card" style="display: none;">
+                <h3>変換結果</h3>
+                <div class="result-container">
+                    <div class="result-box">
+                        <h4>元のテキスト</h4>
+                        <div id="originalText" class="text-display"></div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="result-box">
+                        <h4>変換後のテキスト</h4>
+                        <div id="transformedText" class="text-display"></div>
+                        <button id="copyBtn" class="btn btn-small">コピー</button>
+                    </div>
+                </div>
+                <div id="suggestions" class="suggestions"></div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div id="analysisSection" class="card" style="display: none;">
+                <h3>テキスト分析</h3>
+                <div class="analysis-grid">
+                    <div class="metric">
+                        <span class="metric-label">トーン</span>
+                        <span id="toneResult" class="metric-value">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">明瞭度</span>
+                        <span id="clarityResult" class="metric-value">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">優先度</span>
+                        <span id="priorityResult" class="metric-value">-</span>
+                    </div>
+                </div>
+                <div id="analysisSuggestions" class="suggestions"></div>
+            </div>
+
+            <!-- History Section -->
+            <div class="card">
+                <h3>変換履歴</h3>
+                <button id="loadHistoryBtn" class="btn btn-small">履歴を読み込む</button>
+                <div id="historyList" class="history-list"></div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>処理中...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message" style="display: none;">
+            <span id="errorText"></span>
+            <button onclick="closeError()">×</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

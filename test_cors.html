@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test for ToneBridge Preview API</h1>
+    <button onclick="testPreviewInfo()">Test Preview Info</button>
+    <button onclick="testPreviewTransform()">Test Preview Transform</button>
+    <div id="result"></div>
+
+    <script>
+        async function testPreviewInfo() {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch('http://localhost:8082/api/v1/preview/info');
+                const data = await response.json();
+                resultDiv.innerHTML = '<h2>Success!</h2><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<h2>Error:</h2><pre>' + error.toString() + '</pre>';
+            }
+        }
+
+        async function testPreviewTransform() {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch('http://localhost:8082/api/v1/preview/transform', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: 'テストメッセージです',
+                        target_tone: 'casual',
+                        intensity_level: 2
+                    })
+                });
+                const data = await response.json();
+                resultDiv.innerHTML = '<h2>Success!</h2><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<h2>Error:</h2><pre>' + error.toString() + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

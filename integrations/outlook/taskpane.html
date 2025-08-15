@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToneBridge for Outlook</title>
+    
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css">
+    <link rel="stylesheet" href="taskpane.css">
+</head>
+<body class="ms-font-m ms-Fabric">
+    <div id="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-logo">
+                <span class="logo-icon">🎯</span>
+                <h1 class="ms-font-xl">ToneBridge</h1>
+            </div>
+            <div class="header-subtitle ms-font-s">
+                Transform your email communication
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mode Selection -->
+            <div class="mode-section">
+                <div class="section-title ms-font-m-plus">
+                    <span class="section-icon">🔄</span>
+                    Transformation Mode
+                </div>
+                <div class="mode-tabs">
+                    <button class="tab-button active" data-mode="compose">Compose</button>
+                    <button class="tab-button" data-mode="analyze">Analyze</button>
+                </div>
+            </div>
+
+            <!-- Compose Mode -->
+            <div id="composeMode" class="mode-panel active">
+                <!-- Email Content Display -->
+                <div class="email-preview">
+                    <div class="preview-header">
+                        <span class="preview-title ms-font-m">Current Email</span>
+                        <button id="refreshEmailBtn" class="icon-button" title="Refresh">
+                            🔄
+                        </button>
+                    </div>
+                    <div id="emailContent" class="email-content">
+                        <div class="loading-message">Loading email content...</div>
+                    </div>
+                </div>
+
+                <!-- Transformation Options -->
+                <div class="transform-section">
+                    <div class="section-title ms-font-m">
+                        <span class="section-icon">✨</span>
+                        Transform Options
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="action-button primary" data-action="soften">
+                            <span class="button-icon">🤗</span>
+                            <span class="button-text">Soften</span>
+                            <span class="button-desc">Make warmer</span>
+                        </button>
+                        <button class="action-button" data-action="clarify">
+                            <span class="button-icon">📋</span>
+                            <span class="button-text">Clarify</span>
+                            <span class="button-desc">Improve structure</span>
+                        </button>
+                        <button class="action-button" data-action="summarize">
+                            <span class="button-icon">📄</span>
+                            <span class="button-text">Summarize</span>
+                            <span class="button-desc">Make concise</span>
+                        </button>
+                        <button class="action-button" data-action="structure">
+                            <span class="button-icon">🎯</span>
+                            <span class="button-text">Structure</span>
+                            <span class="button-desc">Organize as requirements</span>
+                        </button>
+                    </div>
+
+                    <!-- Tone Adjustment Slider -->
+                    <div class="tone-slider-section">
+                        <label class="slider-label ms-font-m">
+                            Transformation Intensity
+                        </label>
+                        <div class="slider-container">
+                            <input type="range" id="intensitySlider" min="0" max="3" value="2" class="intensity-slider">
+                            <div class="slider-labels">
+                                <span>Light</span>
+                                <span>Balanced</span>
+                                <span>Strong</span>
+                                <span>Maximum</span>
+                            </div>
+                        </div>
+                        <div id="intensityDescription" class="intensity-description ms-font-s">
+                            Balanced transformation
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="advanced-section">
+                        <button class="collapse-button" data-target="advancedOptions">
+                            <span class="collapse-icon">▶</span>
+                            Advanced Options
+                        </button>
+                        <div id="advancedOptions" class="advanced-options collapsed">
+                            <div class="option-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="preserveFormatting">
+                                    Preserve formatting
+                                </label>
+                            </div>
+                            <div class="option-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="includeSignature">
+                                    Include signature
+                                </label>
+                            </div>
+                            <div class="option-group">
+                                <label class="select-label">Target Audience</label>
+                                <select id="targetAudience" class="select-input">
+                                    <option value="general">General</option>
+                                    <option value="executive">Executive</option>
+                                    <option value="technical">Technical</option>
+                                    <option value="customer">Customer</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transform Button -->
+                <div class="action-section">
+                    <button id="transformBtn" class="transform-button">
+                        <span class="button-icon">✨</span>
+                        Transform Email
+                    </button>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section hidden">
+                    <div class="section-title ms-font-m">
+                        <span class="section-icon">📝</span>
+                        Transformed Email
+                    </div>
+                    <div id="transformedContent" class="transformed-content"></div>
+                    <div class="suggestions-section">
+                        <div class="suggestions-title ms-font-s">💡 Suggestions</div>
+                        <ul id="suggestionsList" class="suggestions-list"></ul>
+                    </div>
+                    <div class="result-actions">
+                        <button id="applyBtn" class="apply-button">
+                            Apply to Email
+                        </button>
+                        <button id="copyBtn" class="copy-button">
+                            Copy to Clipboard
+                        </button>
+                        <button id="retryBtn" class="retry-button">
+                            Try Another
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyze Mode -->
+            <div id="analyzeMode" class="mode-panel">
+                <!-- Analysis Results -->
+                <div class="analysis-section">
+                    <div class="section-title ms-font-m">
+                        <span class="section-icon">📊</span>
+                        Email Analysis
+                    </div>
+                    
+                    <div id="analysisResults" class="analysis-results">
+                        <div class="metric-card">
+                            <div class="metric-label">Tone</div>
+                            <div id="toneValue" class="metric-value">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Clarity</div>
+                            <div id="clarityValue" class="metric-value">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Priority</div>
+                            <div id="priorityValue" class="metric-value">-</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Response Time</div>
+                            <div id="responseTimeValue" class="metric-value">-</div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-actions">
+                        <button id="analyzeBtn" class="analyze-button">
+                            Analyze Current Email
+                        </button>
+                    </div>
+
+                    <!-- Priority Matrix -->
+                    <div class="priority-matrix">
+                        <div class="matrix-title ms-font-m">Eisenhower Matrix</div>
+                        <div class="matrix-grid">
+                            <div class="matrix-cell q1" data-quadrant="Q1">
+                                <div class="cell-title">Do First</div>
+                                <div class="cell-desc">Urgent & Important</div>
+                            </div>
+                            <div class="matrix-cell q2" data-quadrant="Q2">
+                                <div class="cell-title">Schedule</div>
+                                <div class="cell-desc">Important, Not Urgent</div>
+                            </div>
+                            <div class="matrix-cell q3" data-quadrant="Q3">
+                                <div class="cell-title">Delegate</div>
+                                <div class="cell-desc">Urgent, Not Important</div>
+                            </div>
+                            <div class="matrix-cell q4" data-quadrant="Q4">
+                                <div class="cell-title">Eliminate</div>
+                                <div class="cell-desc">Not Urgent or Important</div>
+                            </div>
+                        </div>
+                        <div id="matrixIndicator" class="matrix-indicator"></div>
+                    </div>
+
+                    <!-- Improvement Suggestions -->
+                    <div id="improvementSection" class="improvement-section hidden">
+                        <div class="section-title ms-font-m">
+                            <span class="section-icon">💡</span>
+                            Improvement Suggestions
+                        </div>
+                        <ul id="improvementList" class="improvement-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <span class="footer-status" id="statusMessage">Ready</span>
+                <a href="#" class="footer-link" id="helpLink">Help</a>
+            </div>
+        </footer>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <div class="loading-text">Processing...</div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="errorModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-title">Error</span>
+                    <button class="modal-close" id="closeErrorBtn">×</button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-button" id="errorOkBtn">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-title">Success</span>
+                    <button class="modal-close" id="closeSuccessBtn">×</button>
+                </div>
+                <div class="modal-body">
+                    <p id="successMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-button" id="successOkBtn">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="taskpane.js"></script>
+</body>
+</html>

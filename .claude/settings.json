@@ -1,0 +1,86 @@
+{
+  "model": "claude-3-5-sonnet-20241022",
+  "permissions": {
+    "allow": [
+      "Bash(npm run test)",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run format)",
+      "Bash(npm run check)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "MultiEdit(*)",
+      "LS(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebSearch(*)",
+      "NotebookRead(*)",
+      "NotebookEdit(*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo*)",
+      "Bash(ssh*)",
+      "Bash(curl*)",
+      "Bash(wget*)"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "0"
+  },
+  "hooks": {
+    "pre-tool-call": [],
+    "post-tool-call": [],
+    "user-prompt-submit": []
+  },
+  "codeGenerationOptions": {
+    "preferTypeScript": true,
+    "useStrictMode": true,
+    "generateTests": true,
+    "testFramework": "vitest",
+    "codeStyle": {
+      "indentSize": 2,
+      "useTabs": false,
+      "singleQuote": true,
+      "trailingComma": "es5",
+      "semicolons": true
+    }
+  },
+  "projectPatterns": {
+    "mvp_speed": {
+      "focus": "rapid-prototyping",
+      "allowedTools": ["*"],
+      "testCoverage": "minimal"
+    },
+    "b2b_enterprise": {
+      "focus": "security-compliance",
+      "deniedTools": ["Bash(curl*)", "Bash(wget*)"],
+      "testCoverage": "comprehensive"
+    },
+    "realtime_collab": {
+      "focus": "performance",
+      "testCoverage": "integration-heavy"
+    },
+    "data_pipeline": {
+      "focus": "data-validation",
+      "testCoverage": "data-integrity"
+    },
+    "privacy_onpremise": {
+      "focus": "security",
+      "deniedTools": ["WebSearch(*)", "WebFetch(*)"],
+      "testCoverage": "security-focused"
+    },
+    "cost_optimized": {
+      "focus": "efficiency",
+      "testCoverage": "performance-critical"
+    }
+  }
+}

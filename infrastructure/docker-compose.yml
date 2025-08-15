@@ -1,0 +1,237 @@
+version: '3.8'
+
+services:
+  # Golang Fiber API Gateway
+  gateway:
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      - ENV=development
+      - DATABASE_URL=postgres://tonebridge:tonebridge123@postgres:5432/tonebridge_db?sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - LLM_SERVICE_URL=http://llm:8000
+      - JWT_SECRET=your-secret-key-change-in-production
+      - LOG_LEVEL=debug
+      - ALLOWED_ORIGINS=http://localhost:3001,http://localhost:3000,http://localhost:8080,http://localhost:8082,*
+    # volumes:
+    #   - ../services/gateway:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Python FastAPI LLM Service
+  llm:
+    build:
+      context: ../services/llm
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8000"
+    environment:
+      - ENV=development
+      - REDIS_ADDR=redis:6379
+      - DATABASE_URL=postgresql+asyncpg://tonebridge:tonebridge123@postgres:5432/tonebridge_db
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your-openai-key}
+      - LOG_LEVEL=debug
+    # volumes:
+    #   - ../services/llm:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: "redis:7-alpine"
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - tonebridge-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database with pgvector
+  postgres:
+    image: "pgvector/pgvector:pg16"
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: tonebridge_db
+      POSTGRES_USER: tonebridge
+      POSTGRES_PASSWORD: tonebridge123
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tonebridge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tonebridge -d tonebridge_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Web UI
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    ports:
+      - "3001:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Integration Core Service
+  integration-core:
+    build:
+      context: ../services/integration-core
+      dockerfile: Dockerfile
+    ports:
+      - "8004:8001"
+    environment:
+      - ENV=development
+      - ALLOWED_ORIGINS=*
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN:-}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}
+      - TEAMS_APP_ID=${TEAMS_APP_ID:-}
+      - TEAMS_APP_PASSWORD=${TEAMS_APP_PASSWORD:-}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Auto-Transform Service
+  auto-transform:
+    build:
+      context: ../services/auto-transform
+      dockerfile: Dockerfile
+    ports:
+      - "8005:8000"
+    environment:
+      - ENV=development
+      - DATABASE_URL=postgresql://tonebridge:tonebridge123@postgres:5432/tonebridge_db
+      - REDIS_URL=redis://redis:6379
+      - LLM_SERVICE_URL=http://llm:8000
+      - GATEWAY_URL=http://gateway:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      llm:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Slack Integration (Optional)
+  slack:
+    build:
+      context: ../integrations/slack
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN:-}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}
+      - TONEBRIDGE_API_URL=http://gateway:8080
+      - TONEBRIDGE_SERVICE_EMAIL=${SLACK_SERVICE_EMAIL:-slack-bot@tonebridge.io}
+      - TONEBRIDGE_SERVICE_PASSWORD=${SLACK_SERVICE_PASSWORD:-slack-bot-password}
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    profiles:
+      - integrations
+
+  # Teams Integration (Optional)
+  teams:
+    build:
+      context: ../integrations/teams
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3001"
+    environment:
+      - TEAMS_APP_ID=${TEAMS_APP_ID:-}
+      - TEAMS_APP_PASSWORD=${TEAMS_APP_PASSWORD:-}
+      - TONEBRIDGE_API_URL=http://gateway:8080
+    depends_on:
+      integration-core:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    profiles:
+      - integrations
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Discord Integration (Optional)
+  discord:
+    build:
+      context: ../integrations/discord
+      dockerfile: Dockerfile
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      - TONEBRIDGE_API_URL=http://gateway:8080
+    depends_on:
+      integration-core:
+        condition: service_healthy
+    networks:
+      - tonebridge-network
+    profiles:
+      - integrations
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  tonebridge-network:
+    driver: bridge

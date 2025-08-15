@@ -1,0 +1,119 @@
+name: Scheduled Tasks
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  # Security Updates
+  security-updates:
+    name: Check for Security Updates
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Check Go dependencies
+      working-directory: ./services/gateway
+      run: |
+        go list -json -m all | nancy sleuth
+    
+    - name: Check Python dependencies
+      working-directory: ./services/llm
+      run: |
+        pip install safety
+        safety check -r requirements.txt
+    
+    - name: Create issue if vulnerabilities found
+      if: failure()
+      uses: actions/create-issue@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        title: Security vulnerabilities detected
+        body: |
+          Security scan has detected vulnerabilities in dependencies.
+          Please review the workflow logs and update dependencies.
+          
+          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+  # Database Maintenance
+  database-maintenance:
+    name: Database Maintenance
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run database vacuum
+      run: |
+        echo "Running database maintenance tasks..."
+        # Add your database maintenance scripts here
+        # psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "VACUUM ANALYZE;"
+
+  # Performance Monitoring
+  performance-check:
+    name: Performance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: pip install requests
+    
+    - name: Run performance test
+      run: |
+        python tests/load_test.py
+      env:
+        API_URL: ${{ secrets.STAGING_API_URL }}
+        NUM_USERS: 3
+        REQUESTS_PER_USER: 5
+    
+    - name: Upload results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results-${{ github.run_number }}
+        path: performance-results.json
+        retention-days: 30
+
+  # Cleanup Old Artifacts
+  cleanup:
+    name: Cleanup Old Artifacts
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Delete old artifacts
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const days = 30;
+          const ms_per_day = 86400000;
+          const now = Date.now();
+          const cutoff = now - (days * ms_per_day);
+          
+          const repos = await github.rest.actions.listArtifactsForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+          
+          for (const artifact of repos.data.artifacts) {
+            const created = Date.parse(artifact.created_at);
+            if (created < cutoff) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id
+              });
+              console.log(`Deleted artifact: ${artifact.name}`);
+            }
+          }

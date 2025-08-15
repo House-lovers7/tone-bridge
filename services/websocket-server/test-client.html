@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToneBridge WebSocket Test Client</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .connection-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .control-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .control-section h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .messages {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            word-wrap: break-word;
+        }
+        .message.sent {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .message.received {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+        .message.error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        .message.system {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 0.85em;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .metric {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 ToneBridge WebSocket Test Client</h1>
+        
+        <div id="connectionStatus" class="connection-status disconnected">
+            Disconnected
+        </div>
+
+        <div class="control-panel">
+            <div class="control-section">
+                <h3>Connection</h3>
+                <input type="text" id="wsUrl" placeholder="WebSocket URL" value="ws://localhost:3001">
+                <input type="text" id="apiKey" placeholder="API Key or JWT Token">
+                <button id="connectBtn" onclick="connect()">Connect</button>
+                <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+            </div>
+
+            <div class="control-section">
+                <h3>Channels</h3>
+                <select id="channelSelect">
+                    <option value="transformations">Transformations</option>
+                    <option value="analysis">Analysis</option>
+                    <option value="auto-transform">Auto-Transform</option>
+                    <option value="general">General</option>
+                    <option value="notifications">Notifications</option>
+                </select>
+                <button onclick="subscribeToChannel()">Subscribe</button>
+                <button onclick="unsubscribeFromChannel()">Unsubscribe</button>
+                <div id="subscribedChannels" style="margin-top: 10px; font-size: 0.9em;"></div>
+            </div>
+
+            <div class="control-section">
+                <h3>Transform Text</h3>
+                <textarea id="transformText" placeholder="Enter text to transform" rows="3">This is absolutely terrible! Fix it immediately!</textarea>
+                <select id="transformType">
+                    <option value="soften">Soften</option>
+                    <option value="clarify">Clarify</option>
+                    <option value="structure">Structure</option>
+                    <option value="summarize">Summarize</option>
+                </select>
+                <input type="number" id="intensity" min="1" max="3" value="2" placeholder="Intensity">
+                <button onclick="sendTransform()">Transform</button>
+            </div>
+
+            <div class="control-section">
+                <h3>Analyze Text</h3>
+                <textarea id="analyzeText" placeholder="Enter text to analyze" rows="3">I'm really excited about this new feature!</textarea>
+                <label><input type="checkbox" checked> Tone</label>
+                <label><input type="checkbox" checked> Clarity</label>
+                <label><input type="checkbox" checked> Sentiment</label>
+                <label><input type="checkbox" checked> Priority</label>
+                <button onclick="sendAnalyze()">Analyze</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Custom Message</h3>
+            <input type="text" id="eventType" placeholder="Event type">
+            <textarea id="customData" placeholder="JSON data" rows="3">{}</textarea>
+            <button onclick="sendCustom()">Send Custom</button>
+        </div>
+
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value" id="messagesSent">0</div>
+                <div class="metric-label">Messages Sent</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="messagesReceived">0</div>
+                <div class="metric-label">Messages Received</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="avgResponseTime">0ms</div>
+                <div class="metric-label">Avg Response Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="connectionTime">0s</div>
+                <div class="metric-label">Connection Time</div>
+            </div>
+        </div>
+
+        <h3>Messages</h3>
+        <div class="messages" id="messages"></div>
+
+        <button onclick="clearMessages()">Clear Messages</button>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let subscribedChannels = new Set();
+        let messagesSent = 0;
+        let messagesReceived = 0;
+        let responseTimes = [];
+        let connectionStartTime = null;
+        let pendingRequests = new Map();
+
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.className = 'connection-status ' + status;
+            
+            switch(status) {
+                case 'connected':
+                    statusElement.textContent = '✅ Connected';
+                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('disconnectBtn').disabled = false;
+                    break;
+                case 'disconnected':
+                    statusElement.textContent = '❌ Disconnected';
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = true;
+                    break;
+                case 'connecting':
+                    statusElement.textContent = '⏳ Connecting...';
+                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('disconnectBtn').disabled = true;
+                    break;
+            }
+        }
+
+        function addMessage(content, type = 'received') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let displayContent = content;
+            
+            if (typeof content === 'object') {
+                displayContent = JSON.stringify(content, null, 2);
+            }
+            
+            messageDiv.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                <pre style="margin: 5px 0; white-space: pre-wrap;">${displayContent}</pre>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            if (type === 'sent') {
+                messagesSent++;
+                document.getElementById('messagesSent').textContent = messagesSent;
+            } else if (type === 'received') {
+                messagesReceived++;
+                document.getElementById('messagesReceived').textContent = messagesReceived;
+            }
+        }
+
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            
+            if (!apiKey) {
+                alert('Please enter an API key or JWT token');
+                return;
+            }
+            
+            updateConnectionStatus('connecting');
+            addMessage('Connecting to ' + url, 'system');
+            
+            socket = io(url, {
+                auth: {
+                    token: apiKey
+                },
+                transports: ['websocket', 'polling']
+            });
+            
+            connectionStartTime = Date.now();
+            
+            // Connection events
+            socket.on('connect', () => {
+                updateConnectionStatus('connected');
+                addMessage('Connected! Socket ID: ' + socket.id, 'system');
+                startConnectionTimer();
+            });
+            
+            socket.on('disconnect', (reason) => {
+                updateConnectionStatus('disconnected');
+                addMessage('Disconnected: ' + reason, 'error');
+                stopConnectionTimer();
+            });
+            
+            socket.on('error', (error) => {
+                addMessage('Error: ' + error, 'error');
+            });
+            
+            // Subscription events
+            socket.on('subscribed', (data) => {
+                subscribedChannels.add(data.channel);
+                updateSubscribedChannels();
+                addMessage('Subscribed to channel: ' + data.channel, 'system');
+            });
+            
+            socket.on('unsubscribed', (data) => {
+                subscribedChannels.delete(data.channel);
+                updateSubscribedChannels();
+                addMessage('Unsubscribed from channel: ' + data.channel, 'system');
+            });
+            
+            // Transformation events
+            socket.on('transform_success', (data) => {
+                addMessage(data, 'received');
+            });
+            
+            socket.on('transform_error', (data) => {
+                addMessage(data, 'error');
+            });
+            
+            // Analysis events
+            socket.on('analyze_success', (data) => {
+                addMessage(data, 'received');
+            });
+            
+            socket.on('analyze_error', (data) => {
+                addMessage(data, 'error');
+            });
+            
+            // Auto-transform events
+            socket.on('auto_transform_success', (data) => {
+                addMessage(data, 'received');
+            });
+            
+            socket.on('auto_transform_error', (data) => {
+                addMessage(data, 'error');
+            });
+            
+            // Other events
+            socket.on('notification', (data) => {
+                addMessage('📢 Notification: ' + JSON.stringify(data), 'received');
+            });
+            
+            socket.on('system_message', (data) => {
+                addMessage('🔔 System: ' + JSON.stringify(data), 'system');
+            });
+            
+            socket.on('presence_update', (data) => {
+                addMessage('👤 Presence: ' + JSON.stringify(data), 'received');
+            });
+            
+            socket.on('user_typing', (data) => {
+                addMessage('✍️ User typing: ' + data.userId, 'received');
+            });
+            
+            // Pong response
+            socket.on('pong', (data) => {
+                addMessage('🏓 Pong: ' + JSON.stringify(data), 'received');
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                subscribedChannels.clear();
+                updateSubscribedChannels();
+            }
+        }
+
+        function subscribeToChannel() {
+            if (!socket || !socket.connected) {
+                alert('Not connected');
+                return;
+            }
+            
+            const channel = document.getElementById('channelSelect').value;
+            socket.emit('subscribe', { channel });
+            addMessage('Subscribing to: ' + channel, 'sent');
+        }
+
+        function unsubscribeFromChannel() {
+            if (!socket || !socket.connected) {
+                alert('Not connected');
+                return;
+            }
+            
+            const channel = document.getElementById('channelSelect').value;
+            socket.emit('unsubscribe', { channel });
+            addMessage('Unsubscribing from: ' + channel, 'sent');
+        }
+
+        function sendTransform() {
+            if (!socket || !socket.connected) {
+                alert('Not connected');
+                return;
+            }
+            
+            const data = {
+                text: document.getElementById('transformText').value,
+                transformation_type: document.getElementById('transformType').value,
+                intensity: parseInt(document.getElementById('intensity').value)
+            };
+            
+            const startTime = Date.now();
+            
+            socket.emit('transform', data, (response) => {
+                const responseTime = Date.now() - startTime;
+                responseTimes.push(responseTime);
+                updateAvgResponseTime();
+                
+                if (response.success) {
+                    addMessage({
+                        ...response.data,
+                        responseTime: responseTime + 'ms'
+                    }, 'received');
+                } else {
+                    addMessage('Transform failed: ' + response.error, 'error');
+                }
+            });
+            
+            addMessage('Transform request: ' + JSON.stringify(data), 'sent');
+        }
+
+        function sendAnalyze() {
+            if (!socket || !socket.connected) {
+                alert('Not connected');
+                return;
+            }
+            
+            const data = {
+                text: document.getElementById('analyzeText').value,
+                analysis_types: ['tone', 'clarity', 'sentiment', 'priority']
+            };
+            
+            const startTime = Date.now();
+            
+            socket.emit('analyze', data, (response) => {
+                const responseTime = Date.now() - startTime;
+                responseTimes.push(responseTime);
+                updateAvgResponseTime();
+                
+                if (response.success) {
+                    addMessage({
+                        ...response.data,
+                        responseTime: responseTime + 'ms'
+                    }, 'received');
+                } else {
+                    addMessage('Analyze failed: ' + response.error, 'error');
+                }
+            });
+            
+            addMessage('Analyze request: ' + JSON.stringify(data), 'sent');
+        }
+
+        function sendCustom() {
+            if (!socket || !socket.connected) {
+                alert('Not connected');
+                return;
+            }
+            
+            const eventType = document.getElementById('eventType').value;
+            const data = JSON.parse(document.getElementById('customData').value);
+            
+            socket.emit(eventType, data);
+            addMessage(`Custom event (${eventType}): ${JSON.stringify(data)}`, 'sent');
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        function updateSubscribedChannels() {
+            const div = document.getElementById('subscribedChannels');
+            if (subscribedChannels.size > 0) {
+                div.innerHTML = '<strong>Subscribed:</strong> ' + Array.from(subscribedChannels).join(', ');
+            } else {
+                div.innerHTML = '';
+            }
+        }
+
+        function updateAvgResponseTime() {
+            if (responseTimes.length > 0) {
+                const avg = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+                document.getElementById('avgResponseTime').textContent = Math.round(avg) + 'ms';
+            }
+        }
+
+        let connectionTimer = null;
+        function startConnectionTimer() {
+            connectionTimer = setInterval(() => {
+                if (connectionStartTime) {
+                    const seconds = Math.floor((Date.now() - connectionStartTime) / 1000);
+                    document.getElementById('connectionTime').textContent = seconds + 's';
+                }
+            }, 1000);
+        }
+
+        function stopConnectionTimer() {
+            if (connectionTimer) {
+                clearInterval(connectionTimer);
+                connectionTimer = null;
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'k':
+                        e.preventDefault();
+                        clearMessages();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (!socket || !socket.connected) {
+                            connect();
+                        }
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <title>ToneBridge Commands</title>
+    
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'https://api.tonebridge.io/api/v1';
+        const LOCAL_API_URL = 'http://localhost:8080/api/v1';
+        
+        // Initialize Office.js
+        Office.initialize = function() {
+            // Commands are registered and ready
+        };
+        
+        // Soften email command
+        async function softenEmail(event) {
+            try {
+                // Get email body
+                Office.context.mailbox.item.body.getAsync(
+                    Office.CoercionType.Text,
+                    async (result) => {
+                        if (result.status === Office.AsyncResultStatus.Succeeded) {
+                            const originalText = result.value;
+                            
+                            // Call API to soften the text
+                            const transformedText = await transformText(originalText, 'soften');
+                            
+                            if (transformedText) {
+                                // Update email body
+                                Office.context.mailbox.item.body.setAsync(
+                                    transformedText,
+                                    { coercionType: Office.CoercionType.Text },
+                                    (setResult) => {
+                                        if (setResult.status === Office.AsyncResultStatus.Succeeded) {
+                                            event.completed({
+                                                allowEvent: true,
+                                                showNotification: {
+                                                    type: 'informationalMessage',
+                                                    message: 'Email has been softened successfully!',
+                                                    icon: 'Icon.16x16',
+                                                    persistent: false
+                                                }
+                                            });
+                                        } else {
+                                            showErrorNotification(event, 'Failed to update email content');
+                                        }
+                                    }
+                                );
+                            } else {
+                                showErrorNotification(event, 'Failed to transform email');
+                            }
+                        } else {
+                            showErrorNotification(event, 'Failed to read email content');
+                        }
+                    }
+                );
+            } catch (error) {
+                console.error('Error in softenEmail:', error);
+                showErrorNotification(event, 'An error occurred');
+            }
+        }
+        
+        // Clarify email command
+        async function clarifyEmail(event) {
+            try {
+                // Get email body
+                Office.context.mailbox.item.body.getAsync(
+                    Office.CoercionType.Text,
+                    async (result) => {
+                        if (result.status === Office.AsyncResultStatus.Succeeded) {
+                            const originalText = result.value;
+                            
+                            // Call API to clarify the text
+                            const transformedText = await transformText(originalText, 'clarify');
+                            
+                            if (transformedText) {
+                                // Update email body
+                                Office.context.mailbox.item.body.setAsync(
+                                    transformedText,
+                                    { coercionType: Office.CoercionType.Text },
+                                    (setResult) => {
+                                        if (setResult.status === Office.AsyncResultStatus.Succeeded) {
+                                            event.completed({
+                                                allowEvent: true,
+                                                showNotification: {
+                                                    type: 'informationalMessage',
+                                                    message: 'Email has been clarified successfully!',
+                                                    icon: 'Icon.16x16',
+                                                    persistent: false
+                                                }
+                                            });
+                                        } else {
+                                            showErrorNotification(event, 'Failed to update email content');
+                                        }
+                                    }
+                                );
+                            } else {
+                                showErrorNotification(event, 'Failed to transform email');
+                            }
+                        } else {
+                            showErrorNotification(event, 'Failed to read email content');
+                        }
+                    }
+                );
+            } catch (error) {
+                console.error('Error in clarifyEmail:', error);
+                showErrorNotification(event, 'An error occurred');
+            }
+        }
+        
+        // Transform text using API
+        async function transformText(text, transformationType) {
+            try {
+                const apiUrl = window.location.hostname === 'localhost' ? LOCAL_API_URL : API_BASE_URL;
+                
+                // Get auth token (placeholder - implement actual auth)
+                const authToken = await getAuthToken();
+                
+                const response = await fetch(`${apiUrl}/transform`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        transformation_type: transformationType,
+                        intensity: 2 // Default balanced intensity
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    return data.data.transformed_text;
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('API call error:', error);
+                return null;
+            }
+        }
+        
+        // Get auth token (placeholder - implement actual auth)
+        async function getAuthToken() {
+            // In production:
+            // return await Office.auth.getAccessToken({ forceConsent: false });
+            return 'demo-token';
+        }
+        
+        // Show error notification
+        function showErrorNotification(event, message) {
+            event.completed({
+                allowEvent: false,
+                showNotification: {
+                    type: 'errorMessage',
+                    message: message,
+                    icon: 'Icon.16x16',
+                    persistent: false
+                }
+            });
+        }
+        
+        // Register the functions
+        if (Office.context.platform === Office.PlatformType.PC || 
+            Office.context.platform === Office.PlatformType.Mac) {
+            Office.actions.associate('softenEmail', softenEmail);
+            Office.actions.associate('clarifyEmail', clarifyEmail);
+        }
+    </script>
+</head>
+<body>
+    <!-- This page is loaded in the background for function commands -->
+    <!-- No visible UI needed -->
+</body>
+</html>
