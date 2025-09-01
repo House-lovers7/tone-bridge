@@ -13,7 +13,6 @@
 *.test
 *.out
 vendor/
-go.sum
 
 # Python
 __pycache__/

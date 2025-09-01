@@ -22,17 +22,15 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.22'
+        go-version-file: services/gateway/go.mod
+        cache: true
+        cache-dependency-path: services/gateway/go.sum
     
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('services/gateway/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+    - name: Tidy dependencies
+      working-directory: ./services/gateway
+      run: go mod tidy
     
-    - name: Install dependencies
+    - name: Download dependencies
       working-directory: ./services/gateway
       run: go mod download
     
@@ -51,6 +49,7 @@ jobs:
       with:
         version: latest
         working-directory: services/gateway
+        args: --timeout=5m
 
   # Python LLM Service Tests
   test-llm:
@@ -298,7 +297,7 @@ jobs:
     - name: Upload results
       uses: actions/upload-artifact@v4
       with:
-        name: load-test-results-${{ github.run_number }}
+        name: load-test-results-${{ github.run_number }}-${{ github.run_attempt }}
         path: load-test-results.json
     
     - name: Stop services
