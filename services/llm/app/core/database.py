@@ -18,12 +18,14 @@ AsyncSessionLocal = sessionmaker(
     expire_on_commit=False,
 )
 
+
 async def init_db():
     """Initialize database connection"""
     async with engine.begin() as conn:
         # Test connection
         await conn.execute(text("SELECT 1"))
     print("Database connected successfully")
+
 
 async def get_db():
     """Dependency to get database session"""
