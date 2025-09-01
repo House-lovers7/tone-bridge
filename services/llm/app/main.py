@@ -1,7 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import os
 from dotenv import load_dotenv
 
 from app.api import health, transform, analyze, advanced_transform
@@ -11,6 +10,7 @@ from app.core.redis_client import init_redis
 
 # Load environment variables
 load_dotenv()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +42,7 @@ app.include_router(health.router, tags=["health"])
 app.include_router(transform.router, prefix="/transform", tags=["transform"])
 app.include_router(analyze.router, prefix="/analyze", tags=["analyze"])
 app.include_router(advanced_transform.router, tags=["advanced"])
+
 
 @app.get("/")
 async def root():
