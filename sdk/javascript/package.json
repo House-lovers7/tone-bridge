@@ -41,7 +41,7 @@
   },
   "homepage": "https://docs.tonebridge.io/sdk/javascript",
   "dependencies": {
-    "axios": "^1.7.9",
+    "axios": "1.14.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
